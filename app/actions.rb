@@ -3,6 +3,7 @@ helpers do
         User.find_by(id: session[:user_id])
     end
 end
+
 get '/' do
     @posts = Post.order(created_at: :desc)
     erb(:index)
@@ -21,6 +22,41 @@ get "/logout" do
     session[:user_id] = nil
     redirect to ('/')
 end
+
+get '/posts/:id' do
+    @post = Post.find(params[:id])
+    erb(:"posts/show")
+end
+
+get '/posts/new' do 
+    @post = Post.new
+    erb(:"posts/new")
+end
+
+post '/comments' do
+    
+    text = params[:text]
+    post_id = params[:post_id]
+    
+    comment = Comment.new({ text: text, post_id: post_id, user_id: current_user.id })
+    comment.save
+    
+    redirect(back)
+end
+
+
+post '/posts' do
+    photo_url = params[:photo_url]
+    @post = Post.new({ photo_url: photo_url, user_id: current_user.id })
+    
+    if @post.save
+        redirect(to('/'))
+    
+    else
+        erb(:"posts/new")
+    end
+end
+
 
 post '/login' do
     username = params[:username]
@@ -51,4 +87,20 @@ post '/signup' do
     else
         erb(:signup)
     end
+ 
 end
+
+post '/likes' do
+    post_id = params[:post_id]
+    
+    like = Like.new({ post_id: post_id, user_id: current_user.id })
+    like.save
+    
+    redirect(back)
+end
+
+delete '/likes/:id' do
+    like = Like.find(params[:id])
+    like.destroy
+    redirect(back)
+end 
